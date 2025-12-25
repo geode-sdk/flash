@@ -3,6 +3,7 @@ use super::comment::JSDocComment;
 use super::namespace::CppItem;
 use super::traits::{ASTEntry, Access, EntityMethods, Entry, Include};
 use crate::annotation::Annotations;
+use crate::builder::namespace::Namespace;
 use crate::config::Config;
 use crate::html::{Html, HtmlElement, HtmlList, HtmlText};
 use clang::{Accessibility, Entity, EntityKind, Type, TypeKind};
@@ -40,6 +41,10 @@ impl<T, Sep: Fn() -> T> InsertBetween<T, Sep> for Vec<T> {
         }
         res
     }
+}
+
+fn get_all_classes<'e>(namespace: &'e Namespace<'e>) -> Vec<&'e dyn ASTEntry<'e>> {
+    namespace.get(&|entry| matches!(entry.category(), "class" | "struct"))
 }
 
 fn fmt_type(entity: &Type, builder: &Builder) -> Html {
@@ -412,6 +417,22 @@ pub fn fmt_base_classes<'e, T: ASTEntry<'e>>(entry: &T, kw: &str, builder: &Buil
         .into()
 }
 
+pub fn fmt_derived_class(entity: &Entity, builder: &Builder) -> Html {
+    HtmlElement::new("div")
+        .with_classes(&["entity", "class"])
+        .with_child(
+            HtmlElement::new("a")
+                .with_attr_opt("href", entity.abs_docs_url(builder.config.clone()))
+                .with_child(Html::span(&["keyword", "space-after"], "class"))
+                .with_child(Html::span(
+                    &["name"],
+                    entity.get_name().unwrap_or("_".into()).as_str(),
+                ))
+                .with_child(Html::span(&["space-before"], "{ ... }")),
+        )
+        .into()
+}
+
 pub fn output_entity<'e, T: ASTEntry<'e>>(
     entry: &T,
     builder: &Builder,
@@ -528,6 +549,33 @@ pub fn output_classlike<'e, T: ASTEntry<'e>>(
                     .map(|e| fmt_field(e, builder))
                     .collect::<Vec<_>>(),
             ),
+        ),
+        (
+            "derived_classes",
+            fmt_section("Derived classes", {
+                let mut derived: Vec<_> = get_all_classes(&builder.root)
+                    .into_iter()
+                    .filter(|potentially_derived| {
+                        potentially_derived
+                            .entity()
+                            .get_children()
+                            .iter()
+                            .any(|child| {
+                                child.get_kind() == EntityKind::BaseSpecifier
+                                    && child
+                                        .get_type()
+                                        .and_then(|t| t.get_declaration())
+                                        .map(|decl| decl.get_usr() == entry.entity().get_usr())
+                                        .unwrap_or(false)
+                            })
+                    })
+                    .collect();
+                derived.sort_by_key(|d| d.entity().get_name().unwrap_or("_".into()));
+                derived
+                    .into_iter()
+                    .map(|d| fmt_derived_class(d.entity(), builder))
+                    .collect::<Vec<_>>()
+            }),
         ),
     ]);
     ent
