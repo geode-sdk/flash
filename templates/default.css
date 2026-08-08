@@ -57,7 +57,7 @@ body {
     nav {
         position: absolute;
         width: 30rem;
-        transition: left .25s;
+        transition: left .25s opacity .25s;
     }
 
     nav:not(.collapsed) {
@@ -67,6 +67,8 @@ body {
 
     nav.collapsed {
         left: -30rem;
+        opacity: 0%;
+        pointer-events: none;
     }
 
     body > .overlay.menu {

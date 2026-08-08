@@ -7,7 +7,7 @@ nav > header {
     align-items: center;
 }
 
-@media only screen and (max-device-width: 1100px) {
+@media only screen and (max-width: 1100px) {
     nav > header {
         padding-left: 3.5rem;
     }
@@ -197,7 +197,7 @@ nav > .content a {
     max-width: 100%;
 }
 
-@media only screen and (max-device-width: 800px) {
+@media only screen and (max-width: 800px) {
     nav > .content summary {
         padding: .75rem;
     }
@@ -207,7 +207,7 @@ nav > .content a {
     }
 }
 
-@media only screen and (min-device-width: 800px) and (max-device-width: 1100px) {
+@media only screen and (min-width: 800px) and (max-width: 1100px) {
     nav > .content.monospace summary {
         padding: .5rem;
     }
@@ -215,13 +215,13 @@ nav > .content a {
     nav > .content.monospace a {
         padding: .5rem;
     }
-    
+
     nav > .content:not(.monospace) a {
         padding: .5rem;
     }
 }
 
-@media only screen and (min-device-width: 1100px) {
+@media only screen and (min-width: 1100px) {
     nav > .content:not(.monospace) a {
         padding: .5rem;
     }
